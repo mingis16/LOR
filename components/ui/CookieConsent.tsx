@@ -1,33 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Cookie } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./Button";
-
-const STORAGE_KEY = "lor-cookie-consent";
-
-export type ConsentValue = "accepted" | "rejected";
-
-export function getStoredConsent(): ConsentValue | null {
-  if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(STORAGE_KEY);
-  return v === "accepted" || v === "rejected" ? v : null;
-}
+import { useConsent, setConsent } from "@/lib/consent";
 
 export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    setVisible(getStoredConsent() === null);
-  }, []);
-
-  const setConsent = (value: ConsentValue) => {
-    window.localStorage.setItem(STORAGE_KEY, value);
-    window.dispatchEvent(new CustomEvent("lor-consent-change", { detail: value }));
-    setVisible(false);
-  };
+  const consent = useConsent();
+  const visible = consent === null;
 
   return (
     <AnimatePresence>

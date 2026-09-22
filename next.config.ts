@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Pin the workspace root: a stray package-lock.json in the parent
+  // directory (outside this repo) otherwise confuses Turbopack's
+  // automatic root inference.
+  turbopack: {
+    root: __dirname,
+  },
   async headers() {
     return [
       {
