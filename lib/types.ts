@@ -50,6 +50,8 @@ export interface PaymentReceiptData {
   method: PaymentMethod;
   paidAt: string;
   customerName: string;
+  /** Masked card ("**** 4242") or mobile money number the payment was made from. */
+  payerReference?: string;
 }
 
 export type TablePreference = "Indoor Lounge" | "Outdoor Terrace" | "Rooftop Bar" | "Private Booth" | "No Preference";

@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ShoppingBag, X, Minus, Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
+import { ShoppingBag, X, Minus, Plus, Trash2, AlertCircle } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatCurrency } from "@/lib/utils";
-import { orderSchema, paymentSchema } from "@/lib/validation";
+import { customerDetailsSchema } from "@/lib/validation";
 import { Button } from "@/components/ui/Button";
 import { OrderInvoice } from "@/components/receipts/OrderInvoice";
 import { PaymentReceipt } from "@/components/receipts/PaymentReceipt";
+import { PaymentSelector, type PaymentDetails } from "@/components/payments/PaymentSelector";
 import type { OrderInvoiceData, PaymentMethod, PaymentReceiptData } from "@/lib/types";
 
-type Step = "cart" | "checkout" | "receipt";
+type Step = "cart" | "details" | "payment" | "receipt";
 
 const SERVICE_FEE_RATE = 0.02;
 
@@ -22,12 +23,13 @@ const PAYMENT_METHOD_LABEL: Record<PaymentMethod, "Mobile Money" | "Card" | "Pay
   pickup: "Pay on Pickup",
 };
 
-const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; hint: string }[] = [
-  { value: "pickup", label: "Pay on Pickup", hint: "Cash, card, or mobile money on-site" },
-  { value: "orange-money", label: "Orange Money", hint: "Pay now via Orange Money" },
-  { value: "afrimoney", label: "Africell Afrimoney", hint: "Pay now via Afrimoney" },
-  { value: "card", label: "Visa / Mastercard", hint: "Pay now by card" },
-];
+// Maps PaymentSelector's method vocabulary onto the site-wide PaymentMethod type.
+const PAYMENT_DETAILS_METHOD: Record<PaymentDetails["method"], PaymentMethod> = {
+  orange_money: "orange-money",
+  afrimoney: "afrimoney",
+  card: "card",
+  pay_on_pickup: "pickup",
+};
 
 export function OrderWidget() {
   const cart = useCart();
@@ -42,11 +44,6 @@ export function OrderWidget() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [pickupTime, setPickupTime] = useState("");
-  const [method, setMethod] = useState<PaymentMethod>("pickup");
-  const [momoNumber, setMomoNumber] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
 
   const serviceFee = useMemo(() => Math.round(cart.subtotal * SERVICE_FEE_RATE * 100) / 100, [cart.subtotal]);
@@ -60,51 +57,38 @@ export function OrderWidget() {
     }, 300);
   };
 
-  const handleSubmit = async () => {
+  const handleDetailsSubmit = (e: FormEvent) => {
+    e.preventDefault();
     setFormError(null);
 
-    const orderPayload = {
-      customerName: name,
-      phone,
-      email,
-      pickupTime,
-      paymentMethod: method,
-      lines: cart.lines.map((l) => ({ itemId: l.item.id, quantity: l.quantity })),
-      website,
-    };
-
-    const orderCheck = orderSchema.safeParse(orderPayload);
-    if (!orderCheck.success) {
-      setFormError(orderCheck.error.issues[0]?.message ?? "Please check your details and try again.");
+    const check = customerDetailsSchema.safeParse({ customerName: name, phone, email, pickupTime, website });
+    if (!check.success) {
+      setFormError(check.error.issues[0]?.message ?? "Please check your details and try again.");
       return;
     }
+    setStep("payment");
+  };
 
-    if (method !== "pickup") {
-      const paymentPayload = {
-        orderId: "pending",
-        amount: total,
-        method,
-        customerName: name,
-        phone,
-        momoNumber,
-        cardNumber,
-        cardExpiry,
-        cardCvv,
-        website,
-      };
-      const paymentCheck = paymentSchema.safeParse(paymentPayload);
-      if (!paymentCheck.success) {
-        setFormError(paymentCheck.error.issues[0]?.message ?? "Please check your payment details.");
-        return;
-      }
-    }
-
+  const handlePaymentComplete = async (details: PaymentDetails) => {
+    setFormError(null);
     setSubmitting(true);
+
+    const paymentMethod = PAYMENT_DETAILS_METHOD[details.method];
+    const payerReference = details.method === "card" ? details.cardNumber : details.phoneNumber;
+
     try {
       const orderRes = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
+        body: JSON.stringify({
+          customerName: name,
+          phone,
+          email,
+          pickupTime,
+          paymentMethod,
+          lines: cart.lines.map((l) => ({ itemId: l.item.id, quantity: l.quantity })),
+          website,
+        }),
       });
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
@@ -113,20 +97,17 @@ export function OrderWidget() {
 
       let finalInvoice: OrderInvoiceData = orderData.invoice;
 
-      if (method !== "pickup") {
+      if (paymentMethod !== "pickup") {
         const paymentRes = await fetch("/api/payments", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId: finalInvoice.orderId,
             amount: finalInvoice.total,
-            method,
+            method: paymentMethod,
             customerName: name,
             phone,
-            momoNumber,
-            cardNumber,
-            cardExpiry,
-            cardCvv,
+            payerReference,
             website,
           }),
         });
@@ -143,6 +124,7 @@ export function OrderWidget() {
       cart.clearCart();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setStep("payment");
     } finally {
       setSubmitting(false);
     }
@@ -183,7 +165,8 @@ export function OrderWidget() {
               <div className="flex items-center justify-between print:hidden">
                 <h2 className="font-serif text-xl font-semibold text-white">
                   {step === "cart" && "Your Order"}
-                  {step === "checkout" && "Checkout"}
+                  {step === "details" && "Your Details"}
+                  {step === "payment" && "Payment"}
                   {step === "receipt" && "Order Confirmed"}
                 </h2>
                 <button
@@ -249,7 +232,7 @@ export function OrderWidget() {
                           <span>{formatCurrency(total)}</span>
                         </div>
                       </div>
-                      <Button size="lg" className="mt-6 w-full" onClick={() => setStep("checkout")}>
+                      <Button size="lg" className="mt-6 w-full" onClick={() => setStep("details")}>
                         Proceed to Checkout
                       </Button>
                     </>
@@ -257,14 +240,8 @@ export function OrderWidget() {
                 </div>
               )}
 
-              {step === "checkout" && (
-                <form
-                  className="mt-6 flex flex-1 flex-col gap-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSubmit();
-                  }}
-                >
+              {step === "details" && (
+                <form className="mt-6 flex flex-1 flex-col gap-4" onSubmit={handleDetailsSubmit}>
                   {/* Honeypot field — hidden from real users, bots often fill it */}
                   <div className="absolute -left-[9999px] opacity-0" aria-hidden="true">
                     <label htmlFor="website">Leave this field empty</label>
@@ -321,89 +298,6 @@ export function OrderWidget() {
                     />
                   </Field>
 
-                  <fieldset>
-                    <legend className="mb-2 text-sm font-medium text-white/80">Payment Method</legend>
-                    <div className="space-y-2">
-                      {PAYMENT_OPTIONS.map((opt) => (
-                        <label
-                          key={opt.value}
-                          className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm transition-colors ${
-                            method === opt.value ? "border-[#d4af37] bg-[#d4af37]/10" : "border-white/10 hover:border-white/25"
-                          }`}
-                        >
-                          <span>
-                            <span className="block font-medium text-white">{opt.label}</span>
-                            <span className="block text-xs text-white/50">{opt.hint}</span>
-                          </span>
-                          <input
-                            type="radio"
-                            name="payment-method"
-                            value={opt.value}
-                            checked={method === opt.value}
-                            onChange={() => setMethod(opt.value)}
-                            className="accent-[#d4af37]"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-
-                  {(method === "orange-money" || method === "afrimoney") && (
-                    <Field label={`${method === "orange-money" ? "Orange Money" : "Afrimoney"} Number`} htmlFor="momo-number">
-                      <input
-                        id="momo-number"
-                        required
-                        value={momoNumber}
-                        onChange={(e) => setMomoNumber(e.target.value)}
-                        className={inputClass}
-                        placeholder="076 123456"
-                        inputMode="tel"
-                      />
-                    </Field>
-                  )}
-
-                  {method === "card" && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2">
-                        <Field label="Card Number" htmlFor="card-number">
-                          <input
-                            id="card-number"
-                            required
-                            value={cardNumber}
-                            onChange={(e) => setCardNumber(e.target.value)}
-                            className={inputClass}
-                            placeholder="4242 4242 4242 4242"
-                            inputMode="numeric"
-                            maxLength={19}
-                          />
-                        </Field>
-                      </div>
-                      <Field label="Expiry (MM/YY)" htmlFor="card-expiry">
-                        <input
-                          id="card-expiry"
-                          required
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          className={inputClass}
-                          placeholder="09/28"
-                          maxLength={5}
-                        />
-                      </Field>
-                      <Field label="CVV" htmlFor="card-cvv">
-                        <input
-                          id="card-cvv"
-                          required
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value)}
-                          className={inputClass}
-                          placeholder="123"
-                          inputMode="numeric"
-                          maxLength={4}
-                        />
-                      </Field>
-                    </div>
-                  )}
-
                   {formError && (
                     <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
                       <AlertCircle size={16} className="mt-0.5 shrink-0" />
@@ -415,11 +309,35 @@ export function OrderWidget() {
                     <Button type="button" variant="ghost" size="md" onClick={() => setStep("cart")} className="flex-1">
                       Back
                     </Button>
-                    <Button type="submit" size="md" className="flex-1" disabled={submitting}>
-                      {submitting ? <Loader2 className="animate-spin" size={18} /> : `Place Order — ${formatCurrency(total)}`}
+                    <Button type="submit" size="md" className="flex-1">
+                      Continue to Payment
                     </Button>
                   </div>
                 </form>
+              )}
+
+              {step === "payment" && (
+                <div className="mt-6 flex flex-1 flex-col gap-4">
+                  <PaymentSelector totalAmount={total} onPaymentComplete={handlePaymentComplete} />
+
+                  {formError && (
+                    <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                      <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                      {formError}
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="md"
+                    onClick={() => setStep("details")}
+                    disabled={submitting}
+                  >
+                    Back
+                  </Button>
+                  {submitting && <p className="text-center text-sm text-white/50">Processing your order…</p>}
+                </div>
               )}
 
               {step === "receipt" && invoice && (

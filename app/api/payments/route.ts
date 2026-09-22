@@ -33,14 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", issues: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { orderId, amount, method, customerName } = parsed.data;
-
-  if ((method === "orange-money" || method === "afrimoney") && !parsed.data.momoNumber) {
-    return NextResponse.json({ error: "Mobile money number is required" }, { status: 400 });
-  }
-  if (method === "card" && (!parsed.data.cardNumber || !parsed.data.cardExpiry || !parsed.data.cardCvv)) {
-    return NextResponse.json({ error: "Complete card details are required" }, { status: 400 });
-  }
+  const { orderId, amount, method, customerName, payerReference } = parsed.data;
 
   // TODO: replace with a real gateway call using the env vars documented above.
   // This mock always succeeds so the ordering/reservation flow can be demoed end-to-end.
@@ -51,6 +44,7 @@ export async function POST(request: Request) {
     method,
     paidAt: new Date().toISOString(),
     customerName,
+    payerReference,
   };
 
   return NextResponse.json({ receipt }, { status: 201 });

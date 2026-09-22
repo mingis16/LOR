@@ -31,6 +31,15 @@ export const cartLineInputSchema = z.object({
   notes: z.string().max(200).optional(),
 });
 
+// Validated after the cart step, before payment method is known.
+export const customerDetailsSchema = z.object({
+  customerName: safeText(2, 60),
+  phone: phoneSchema,
+  email: emailSchema,
+  pickupTime: z.string().min(1, "Select a pickup time"),
+  website: honeypotSchema,
+});
+
 export const orderSchema = z.object({
   customerName: safeText(2, 60),
   phone: phoneSchema,
@@ -53,26 +62,16 @@ export const reservationSchema = z.object({
   website: honeypotSchema,
 });
 
+// Raw card/mobile-money numbers are validated client-side (see PaymentSelector)
+// and never forwarded here — only a masked/display reference is. A real gateway
+// integration would tokenize on the client and send us a token, never raw PANs.
 export const paymentSchema = z.object({
   orderId: z.string().min(1),
   amount: z.number().positive(),
   method: z.enum(["orange-money", "afrimoney", "card"]),
   customerName: safeText(2, 60),
   phone: phoneSchema,
-  momoNumber: z.string().optional(),
-  cardNumber: z
-    .string()
-    .transform((v) => v.replace(/\s+/g, ""))
-    .refine((v) => v === "" || /^\d{16}$/.test(v), "Card number must be 16 digits")
-    .optional(),
-  cardExpiry: z
-    .string()
-    .refine((v) => v === "" || /^(0[1-9]|1[0-2])\/\d{2}$/.test(v), "Use MM/YY format")
-    .optional(),
-  cardCvv: z
-    .string()
-    .refine((v) => v === "" || /^\d{3,4}$/.test(v), "CVV must be 3–4 digits")
-    .optional(),
+  payerReference: z.string().max(40).optional(),
   website: honeypotSchema,
 });
 

@@ -24,6 +24,7 @@ export function PaymentReceipt({ data, onClose }: { data: PaymentReceiptData; on
         <ReceiptRow label="Order Reference" value={data.orderId} />
         <ReceiptRow label="Customer" value={data.customerName} />
         <ReceiptRow label="Payment Method" value={METHOD_LABEL[data.method] ?? data.method} />
+        {data.payerReference && <ReceiptRow label="Paid From" value={data.payerReference} />}
         <ReceiptRow label="Paid At" value={formatDateTime(data.paidAt)} />
       </div>
 
