@@ -33,7 +33,7 @@ export interface OrderCustomer {
 export interface OrderInvoiceData {
   orderId: string;
   customer: OrderCustomer;
-  lines: { name: string; quantity: number; price: number; lineTotal: number }[];
+  lines: { id: string; name: string; quantity: number; price: number; lineTotal: number }[];
   subtotal: number;
   serviceFee: number;
   total: number;

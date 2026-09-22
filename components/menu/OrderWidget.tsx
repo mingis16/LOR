@@ -15,6 +15,13 @@ type Step = "cart" | "checkout" | "receipt";
 
 const SERVICE_FEE_RATE = 0.02;
 
+const PAYMENT_METHOD_LABEL: Record<PaymentMethod, "Mobile Money" | "Card" | "Pay on Pickup"> = {
+  "orange-money": "Mobile Money",
+  afrimoney: "Mobile Money",
+  card: "Card",
+  pickup: "Pay on Pickup",
+};
+
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; hint: string }[] = [
   { value: "pickup", label: "Pay on Pickup", hint: "Cash, card, or mobile money on-site" },
   { value: "orange-money", label: "Orange Money", hint: "Pay now via Orange Money" },
@@ -417,7 +424,20 @@ export function OrderWidget() {
 
               {step === "receipt" && invoice && (
                 <div className="mt-6 flex flex-1 flex-col items-center gap-6">
-                  <OrderInvoice data={invoice} />
+                  <OrderInvoice
+                    orderId={invoice.orderId}
+                    customerName={invoice.customer.name}
+                    phone={invoice.customer.phone}
+                    items={invoice.lines.map((l) => ({ id: l.id, name: l.name, quantity: l.quantity, price: l.price }))}
+                    subtotal={invoice.subtotal}
+                    tax={invoice.serviceFee}
+                    total={invoice.total}
+                    pickupTime={invoice.pickupTime}
+                    paymentMethod={PAYMENT_METHOD_LABEL[invoice.paymentMethod]}
+                    paymentStatus={invoice.status === "paid" ? "PAID" : "PENDING"}
+                    transactionRef={receipt?.transactionRef}
+                    onClose={closeAll}
+                  />
                   {receipt && <PaymentReceipt data={receipt} />}
                   <Button size="md" onClick={closeAll} className="print:hidden">
                     Done

@@ -32,13 +32,14 @@ export async function POST(request: Request) {
   const { customerName, phone, email, pickupTime, paymentMethod, lines } = parsed.data;
 
   // Re-price server-side from the menu catalog — never trust client-submitted prices.
-  const resolvedLines: { name: string; quantity: number; price: number; lineTotal: number }[] = [];
+  const resolvedLines: OrderInvoiceData["lines"] = [];
   for (const line of lines) {
     const menuItem = MENU_ITEMS.find((m) => m.id === line.itemId);
     if (!menuItem) {
       return NextResponse.json({ error: `Unknown menu item: ${line.itemId}` }, { status: 400 });
     }
     resolvedLines.push({
+      id: menuItem.id,
       name: menuItem.name,
       quantity: line.quantity,
       price: menuItem.price,
