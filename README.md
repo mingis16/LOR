@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LÖR — Restaurant, Lounge & Fitness
+
+A luxury hybrid complex website for LÖR on Goderich Road, Freetown, Sierra Leone — a
+restaurant & lounge with online pickup ordering, table reservations, and an
+elite fitness centre with class schedules and membership registration.
+
+Built with Next.js 16 (App Router, TypeScript), Tailwind CSS 4, Framer Motion, and Zod.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
+cp .env.local.example .env.local   # fill in real values when available
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/                  Routes (App Router), API routes, and metadata files
+  api/                Order, reservation, payment, and membership endpoints
+  menu/ reservations/ gym/ faq/ privacy/ terms/
+  icon.tsx, apple-icon.tsx, opengraph-image.tsx, manifest.ts, sitemap.ts, robots.ts
+components/
+  ui/                 Navbar, Footer, buttons, cookie consent, WhatsApp widget, etc.
+  menu/                Menu browser, cart, checkout flow
+  reservations/       Reservation form
+  gym/                Class schedule, membership registration
+  receipts/           Printable digital invoice / pass / receipt components
+  home/               Homepage sections
+lib/                  Types, static data, validation schemas, cart context, utils
+```
 
-## Learn More
+## Key Features
 
-To learn more about Next.js, take a look at the following resources:
+- **Menu & online pickup ordering** with a cart, checkout, and a printable
+  digital Order Invoice (unique order ID, itemized list, totals, pickup time, status).
+- **Table reservations** with an instant, printable Digital Reservation Pass.
+- **Payments**: Pay Online (Orange Money / Afrimoney / card, currently mocked
+  server-side — see `.env.local.example` for where to plug in real gateway
+  credentials) or Pay on Pickup/Arrival, with a Digital Payment Receipt for
+  online payments.
+- **Gym**: weekly class schedule filters and a membership registration flow
+  with a printable Digital Membership Pass.
+- **Security & anti-fraud**: server-side Zod validation, honeypot fields, and
+  per-IP rate limiting on every form-backed API route. Menu prices are always
+  re-verified server-side from the catalog, never trusted from the client.
+- **Cookie consent** gates analytics (GA / Plausible wrappers, both env-var
+  driven and off by default).
+- SEO: dynamic metadata per route, generated OG image/favicons via
+  `next/og`, `sitemap.xml`, `robots.txt`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes on photography
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Menu, hero, and class imagery currently uses typographic/gradient placeholders
+rather than stock photos, since no real photography was supplied. Swap in real
+photos via `next/image` (see `lib/data.ts` `MenuItem.image` field, currently
+unused by the UI) when available.
 
-## Deploy on Vercel
+## Environment variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `.env.local.example`. Payment gateway credentials and the public site URL
+are read from environment variables and are never bundled into the client.

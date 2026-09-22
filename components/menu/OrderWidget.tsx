@@ -146,7 +146,7 @@ export function OrderWidget() {
       <button
         onClick={() => setOpen(true)}
         aria-label={`Open cart, ${cart.itemCount} items`}
-        className="fixed bottom-5 left-5 z-40 flex items-center gap-2 rounded-full bg-[#d4af37] px-5 py-3.5 font-semibold text-[#0a0a0a] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-transform hover:scale-105 sm:bottom-8 sm:left-8"
+        className="fixed bottom-5 left-5 z-[60] flex items-center gap-2 rounded-full bg-[#d4af37] px-5 py-3.5 font-semibold text-[#0a0a0a] shadow-[0_8px_24px_rgba(212,175,55,0.35)] transition-transform hover:scale-105 sm:bottom-8 sm:left-8"
       >
         <ShoppingBag size={20} />
         {cart.itemCount > 0 && (
@@ -164,14 +164,14 @@ export function OrderWidget() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeAll}
-              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col overflow-y-auto bg-[#0a0a0a] p-6 shadow-2xl print:static print:h-auto print:w-auto print:max-w-none print:p-0"
+              className="fixed right-0 top-0 z-[70] flex h-full w-full max-w-md flex-col overflow-y-auto bg-[#0a0a0a] p-6 shadow-2xl print:static print:h-auto print:w-auto print:max-w-none print:p-0"
             >
               <div className="flex items-center justify-between print:hidden">
                 <h2 className="font-serif text-xl font-semibold text-white">
