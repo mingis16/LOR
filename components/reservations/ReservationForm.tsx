@@ -4,8 +4,9 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { reservationSchema } from "@/lib/validation";
 import { Button } from "@/components/ui/Button";
-import { ReservationPass } from "@/components/receipts/ReservationPass";
+import { ReservationReceipt } from "@/components/receipts/ReservationReceipt";
 import type { ReservationData, TablePreference } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 const TABLE_OPTIONS: TablePreference[] = [
   "No Preference",
@@ -77,7 +78,18 @@ export function ReservationForm() {
   if (reservation) {
     return (
       <div className="flex flex-col items-center gap-6">
-        <ReservationPass data={reservation} />
+        <ReservationReceipt
+          bookingRef={reservation.bookingRef}
+          guestName={reservation.guestName}
+          phone={reservation.phone}
+          email={reservation.email ?? ""}
+          date={formatDate(reservation.date)}
+          time={reservation.time}
+          partySize={reservation.partySize}
+          tablePreference={reservation.tablePreference}
+          specialRequests={reservation.specialRequests}
+          onClose={() => setReservation(null)}
+        />
         <Button
           size="md"
           variant="secondary"
