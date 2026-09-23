@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { membershipSchema } from "@/lib/validation";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { generateReference } from "@/lib/utils";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { MembershipData } from "@/lib/types";
 
 export async function POST(request: Request) {
@@ -27,9 +28,25 @@ export async function POST(request: Request) {
   }
 
   const { fullName, phone, email, plan, startDate } = parsed.data;
+  const membershipId = generateReference("MEM");
+  const supabase = createServiceRoleClient();
+
+  const { error } = await supabase.from("memberships").insert({
+    membership_id: membershipId,
+    full_name: fullName,
+    phone,
+    email: email || null,
+    plan,
+    start_date: startDate,
+  });
+
+  if (error) {
+    console.error("memberships: failed to insert membership:", error.message);
+    return NextResponse.json({ error: "Could not complete registration. Please try again." }, { status: 500 });
+  }
 
   const membership: MembershipData = {
-    membershipId: generateReference("MEM"),
+    membershipId,
     fullName,
     phone,
     email: email || undefined,

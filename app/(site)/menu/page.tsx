@@ -3,6 +3,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { MenuBrowser } from "@/components/menu/MenuBrowser";
 import { OrderWidget } from "@/components/menu/OrderWidget";
 import { CartProvider } from "@/lib/cart-context";
+import { getMenuItems } from "@/lib/supabase/queries";
 
 export const metadata: Metadata = {
   title: "Menu & Online Pickup Ordering",
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/menu" },
 };
 
-export default function MenuPage() {
+export default async function MenuPage() {
+  const menuItems = await getMenuItems();
+
   return (
     <CartProvider>
       <div className="mx-auto max-w-7xl px-5 py-28 sm:px-8">
@@ -21,7 +24,7 @@ export default function MenuPage() {
           description="Browse appetizers, mains, cocktails, and shisha lounge specials. Add items to your cart, choose a pickup time, and pay online or on arrival."
         />
         <div className="mt-12">
-          <MenuBrowser />
+          <MenuBrowser items={menuItems} />
         </div>
       </div>
       <OrderWidget />

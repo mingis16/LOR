@@ -1,19 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MENU_ITEMS } from "@/lib/data";
-import type { MenuCategory } from "@/lib/types";
+import type { MenuCategory, MenuItem } from "@/lib/types";
 import { MenuItemCard } from "./MenuItemCard";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES: MenuCategory[] = ["Appetizers", "Mains", "Cocktails", "Shisha & Lounge"];
 
-export function MenuBrowser() {
+export function MenuBrowser({ items: allItems }: { items: MenuItem[] }) {
   const [active, setActive] = useState<MenuCategory | "All">("All");
 
   const items = useMemo(
-    () => (active === "All" ? MENU_ITEMS : MENU_ITEMS.filter((i) => i.category === active)),
-    [active]
+    () => (active === "All" ? allItems : allItems.filter((i) => i.category === active)),
+    [active, allItems]
   );
 
   return (
@@ -39,6 +38,9 @@ export function MenuBrowser() {
         {items.map((item) => (
           <MenuItemCard key={item.id} item={item} />
         ))}
+        {items.length === 0 && (
+          <p className="col-span-full py-12 text-center text-white/50">No items in this category yet.</p>
+        )}
       </div>
     </div>
   );

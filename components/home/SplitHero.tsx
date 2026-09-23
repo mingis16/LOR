@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { UtensilsCrossed, Dumbbell, ArrowRight } from "lucide-react";
 import { LinkButton } from "@/components/ui/Button";
@@ -42,24 +43,35 @@ export function SplitHero() {
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#161616] via-[#111111] to-[#0a0a0a] p-8 sm:p-12"
+          className="group relative overflow-hidden rounded-3xl border border-white/10 p-8 sm:p-12"
         >
+          <Image
+            src="/images/restaurant/hero-dining.jpg"
+            alt="LÖR rooftop dining terrace overlooking the Freetown coastline"
+            fill
+            priority
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/70 to-[#0a0a0a]/20" />
           <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-[#d4af37]/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
-          <UtensilsCrossed className="text-[#d4af37]" size={40} strokeWidth={1.5} />
-          <h2 className="mt-6 font-serif text-2xl font-semibold text-white sm:text-3xl">
-            LÖR Restaurant &amp; Lounge
-          </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-white/65">
-            Chef-crafted mains, hand-shaken cocktails, and a shisha lounge for long nights on
-            Goderich Road. Browse the menu, order pickup, or reserve your table.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <LinkButton href="/menu" size="md">
-              Order Online <ArrowRight size={16} />
-            </LinkButton>
-            <LinkButton href="/reservations" size="md" variant="secondary">
-              Reserve a Table
-            </LinkButton>
+          <div className="relative">
+            <UtensilsCrossed className="text-[#d4af37]" size={40} strokeWidth={1.5} />
+            <h2 className="mt-6 font-serif text-2xl font-semibold text-white sm:text-3xl">
+              LÖR Restaurant &amp; Lounge
+            </h2>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-white/65">
+              Chef-crafted mains, hand-shaken cocktails, and a shisha lounge for long nights on
+              Goderich Road. Browse the menu, order pickup, or reserve your table.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <LinkButton href="/menu" size="md">
+                Order Online <ArrowRight size={16} />
+              </LinkButton>
+              <LinkButton href="/reservations" size="md" variant="secondary">
+                Reserve a Table
+              </LinkButton>
+            </div>
           </div>
         </motion.div>
 
@@ -67,21 +79,32 @@ export function SplitHero() {
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, delay: 0.35 }}
-          className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#161616] via-[#111111] to-[#0a0a0a] p-8 sm:p-12"
+          className="group relative overflow-hidden rounded-3xl border border-white/10 p-8 sm:p-12"
         >
+          <Image
+            src="/images/gym/floor-main.jpg"
+            alt="Royal Fitness main training floor at LÖR"
+            fill
+            priority
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/70 to-[#0a0a0a]/20" />
           <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-[#d4af37]/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
-          <Dumbbell className="text-[#d4af37]" size={40} strokeWidth={1.5} />
-          <h2 className="mt-6 font-serif text-2xl font-semibold text-white sm:text-3xl">
-            LÖR Fitness &amp; Gym
-          </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-white/65">
-            HIIT, strength, and yoga classes led by elite coaches, plus a full training floor.
-            Day passes, monthly, and VIP memberships available.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <LinkButton href="/gym" size="md">
-              View Classes &amp; Plans <ArrowRight size={16} />
-            </LinkButton>
+          <div className="relative">
+            <Dumbbell className="text-[#d4af37]" size={40} strokeWidth={1.5} />
+            <h2 className="mt-6 font-serif text-2xl font-semibold text-white sm:text-3xl">
+              LÖR Fitness &amp; Gym
+            </h2>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-white/65">
+              HIIT, strength, and yoga classes led by elite coaches, plus a full training floor.
+              Day passes, monthly, and VIP memberships available.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <LinkButton href="/gym" size="md">
+                View Classes &amp; Plans <ArrowRight size={16} />
+              </LinkButton>
+            </div>
           </div>
         </motion.div>
       </div>

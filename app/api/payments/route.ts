@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { paymentSchema } from "@/lib/validation";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { generateReference } from "@/lib/utils";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { PaymentReceiptData } from "@/lib/types";
 
 /**
@@ -34,15 +35,55 @@ export async function POST(request: Request) {
   }
 
   const { orderId, amount, method, customerName, payerReference } = parsed.data;
+  const supabase = createServiceRoleClient();
+
+  const { data: orderRow, error: orderLookupError } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("order_ref", orderId)
+    .single();
+
+  if (orderLookupError || !orderRow) {
+    return NextResponse.json({ error: "We couldn't find that order. Please start over." }, { status: 404 });
+  }
 
   // TODO: replace with a real gateway call using the env vars documented above.
   // This mock always succeeds so the ordering/reservation flow can be demoed end-to-end.
+  const transactionRef = generateReference("TXN");
+  const paidAt = new Date().toISOString();
+
+  const { error: paymentError } = await supabase.from("payments").insert({
+    transaction_ref: transactionRef,
+    order_id: orderRow.id,
+    amount,
+    method,
+    customer_name: customerName,
+    payer_reference: payerReference || null,
+    paid_at: paidAt,
+  });
+
+  if (paymentError) {
+    console.error("payments: failed to insert payment:", paymentError.message);
+    return NextResponse.json({ error: "Payment failed. Please try again." }, { status: 500 });
+  }
+
+  const { error: updateError } = await supabase
+    .from("orders")
+    .update({ payment_status: "paid" })
+    .eq("id", orderRow.id);
+
+  if (updateError) {
+    console.error("payments: failed to mark order paid:", updateError.message);
+    // The payment itself succeeded and was recorded — don't fail the request
+    // over a status-sync issue; staff can correct it from /admin.
+  }
+
   const receipt: PaymentReceiptData = {
-    transactionRef: generateReference("TXN"),
+    transactionRef,
     orderId,
     amount,
     method,
-    paidAt: new Date().toISOString(),
+    paidAt,
     customerName,
     payerReference,
   };

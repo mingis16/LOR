@@ -4,7 +4,10 @@ import { SplitHero } from "@/components/home/SplitHero";
 import { LocationSection } from "@/components/home/LocationSection";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { LinkButton } from "@/components/ui/Button";
-import { MENU_ITEMS, MEMBERSHIP_OPTIONS } from "@/lib/data";
+import { PhotoGrid } from "@/components/ui/PhotoGrid";
+import { MEMBERSHIP_OPTIONS } from "@/lib/data";
+import { RESTAURANT_GALLERY } from "@/lib/images";
+import { getMenuItems } from "@/lib/supabase/queries";
 import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -14,9 +17,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const popularItems = MENU_ITEMS.filter((item) => item.popular).slice(0, 3);
+export default async function HomePage() {
+  const menuItems = await getMenuItems();
+  const popularItems = menuItems.filter((item) => item.popular).slice(0, 3);
 
-export default function HomePage() {
   return (
     <>
       <SplitHero />
@@ -54,6 +58,18 @@ export default function HomePage() {
           <LinkButton href="/menu" size="lg">
             View Full Menu &amp; Order <ArrowRight size={18} />
           </LinkButton>
+        </div>
+      </section>
+
+      {/* Photo gallery */}
+      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
+        <SectionHeading
+          eyebrow="Inside LÖR"
+          title="Rooftop Dining, Reimagined"
+          description="A glimpse of the terrace, the lounge, and the plates that keep guests coming back."
+        />
+        <div className="mt-12">
+          <PhotoGrid images={RESTAURANT_GALLERY} />
         </div>
       </section>
 

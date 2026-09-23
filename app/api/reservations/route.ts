@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { reservationSchema } from "@/lib/validation";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { generateReference } from "@/lib/utils";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import type { ReservationData } from "@/lib/types";
 
 export async function POST(request: Request) {
@@ -33,8 +34,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Please select a valid future date and time" }, { status: 400 });
   }
 
+  const bookingRef = generateReference("RES");
+  const supabase = createServiceRoleClient();
+
+  const { error } = await supabase.from("reservations").insert({
+    booking_ref: bookingRef,
+    guest_name: guestName,
+    phone,
+    email: email || null,
+    party_size: partySize,
+    reservation_date: date,
+    reservation_time: time,
+    table_preference: tablePreference,
+    special_requests: specialRequests || null,
+  });
+
+  if (error) {
+    console.error("reservations: failed to insert reservation:", error.message);
+    return NextResponse.json({ error: "Could not complete your reservation. Please try again." }, { status: 500 });
+  }
+
   const reservation: ReservationData = {
-    bookingRef: generateReference("RES"),
+    bookingRef,
     guestName,
     phone,
     email: email || undefined,

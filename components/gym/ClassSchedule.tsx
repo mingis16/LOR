@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Flame, Dumbbell, Flower2 } from "lucide-react";
-import { GYM_CLASSES } from "@/lib/data";
 import type { GymClass } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -14,12 +13,12 @@ const TYPE_ICON: Record<GymClass["type"], typeof Flame> = {
 
 const TYPES: (GymClass["type"] | "All")[] = ["All", "HIIT", "Strength", "Yoga"];
 
-export function ClassSchedule() {
+export function ClassSchedule({ classes }: { classes: GymClass[] }) {
   const [active, setActive] = useState<GymClass["type"] | "All">("All");
 
-  const classes = useMemo(
-    () => (active === "All" ? GYM_CLASSES : GYM_CLASSES.filter((c) => c.type === active)),
-    [active]
+  const filtered = useMemo(
+    () => (active === "All" ? classes : classes.filter((c) => c.type === active)),
+    [active, classes]
   );
 
   return (
@@ -42,7 +41,7 @@ export function ClassSchedule() {
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {classes.map((cls) => {
+        {filtered.map((cls) => {
           const Icon = TYPE_ICON[cls.type];
           return (
             <div key={cls.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -58,6 +57,9 @@ export function ClassSchedule() {
             </div>
           );
         })}
+        {filtered.length === 0 && (
+          <p className="col-span-full py-12 text-center text-white/50">No classes in this category yet.</p>
+        )}
       </div>
     </div>
   );

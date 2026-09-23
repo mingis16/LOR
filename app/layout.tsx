@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/ui/Navbar";
-import { Footer } from "@/components/ui/Footer";
 import { WhatsAppWidget } from "@/components/ui/WhatsAppWidget";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { Analytics } from "@/components/ui/Analytics";
@@ -73,9 +71,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sansBody.variable} ${serifDisplay.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-[#0a0a0a] text-[#f5f5f0]">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        {children}
         <WhatsAppWidget />
         <CookieConsent />
         <Analytics />
